@@ -412,7 +412,7 @@ function downloadRecipes(){
 /* ---------- Add Recipe feature ---------- */
 const LS_KEY = 'userRecipes_v1';
 function loadUserRecipes(){ try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch(e){ return []; } }
-function saveUserRecipes(a){ try { localStorage.setItem(LS_KEY, JSON.stringify(a)); } catch(e){ alert('Could not save — browser storage may be full.'); } }
+function saveUserRecipes(a){ try { localStorage.setItem(LS_KEY, JSON.stringify(a)); } catch(e){ alert('Could not save - browser storage may be full.'); } }
 function recipeKey(r){ return ((r.source||'') + '|' + (r.title||'')).toLowerCase().trim(); }
 function rebuildRecipes(){
   const base = BASE_RECIPES.slice();
@@ -420,7 +420,6 @@ function rebuildRecipes(){
   const users = loadUserRecipes().filter(r => !seen.has(recipeKey(r)));
   RECIPES = base.concat(users);
 }
-
 function openAdd(){ document.getElementById('addOverlay').classList.add('open'); }
 function closeAdd(ev){
   if(ev && ev.target !== document.getElementById('addOverlay')) return;
@@ -457,7 +456,7 @@ function collectInstructions(ri){
   function walk(x){
     if(x == null) return;
     if(Array.isArray(x)){ x.forEach(walk); return; }
-    if(typeof x === 'string'){ x.split(/\r?\n/).forEach(s => { s = s.trim(); if(s) out.push(s); }); return; }
+    if(typeof x === 'string'){ x.split(/\r?\n/).forEach(function(s){ s = s.trim(); if(s) out.push(s); }); return; }
     if(typeof x === 'object'){
       if(x['@type'] === 'HowToSection' && x.itemListElement){ walk(x.itemListElement); return; }
       if(x.text){ out.push(String(x.text).trim()); return; }
@@ -498,7 +497,7 @@ async function importFromUrl(){
   if(!url){ setStatus('Enter a URL first.', 'err'); return; }
   const btn = document.getElementById('arImportBtn');
   btn.disabled = true;
-  setStatus('Fetching recipe…');
+  setStatus('Fetching recipe...');
   const proxies = [
     function(u){ return { url: 'https://r.jina.ai/' + u, opts: { headers: { 'x-respond-with': 'html' } } }; },
     function(u){ return { url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u), opts: {} }; }
@@ -522,7 +521,7 @@ async function importFromUrl(){
       recipe = findRecipeNode(data);
       if(recipe) break;
     }
-    if(!recipe){ setStatus('No structured recipe found on that page — fill the fields in by hand.', 'err'); btn.disabled = false; return; }
+    if(!recipe){ setStatus('No structured recipe found on that page - fill the fields in by hand.', 'err'); btn.disabled = false; return; }
     document.getElementById('arTitle').value = firstStr(recipe.name);
     document.getElementById('arServes').value = firstStr(recipe.recipeYield);
     document.getElementById('arPrep').value = isoToText(recipe.prepTime);
@@ -538,7 +537,7 @@ async function importFromUrl(){
     document.getElementById('arSource').value = url;
     setStatus('Imported! Review the fields, pick a category, then Save.', 'ok');
   } catch(e){
-    setStatus('Something went wrong reading that page — fill the fields in by hand.', 'err');
+    setStatus('Something went wrong reading that page - fill the fields in by hand.', 'err');
   }
   btn.disabled = false;
 }
@@ -582,7 +581,7 @@ function clearAddForm(){
   ['arUrl','arTitle','arServes','arPrep','arCook','arTotal','arTags','arPhoto','arIngredients','arDirections','arNutrition','arNotes','arSource'].forEach(function(id){ document.getElementById(id).value = ''; });
   document.getElementById('arCategory').value = 'other';
   document.getElementById('arPhotoPreview').style.display = 'none';
-  setStatus('Paste a link and click Import — or fill in the fields below by hand.');
+  setStatus('Paste a link and click Import - or fill in the fields below by hand.');
 }
 function removeUserRecipeAt(i){
   const r = RECIPES[i];
@@ -598,15 +597,15 @@ function removeUserRecipeAt(i){
 async function publishRecipes(){
   const note = document.getElementById('arPublishNote');
   const users = loadUserRecipes();
-  if(!users.length){ note.textContent = ' — nothing added yet.'; return; }
-  note.textContent = ' — preparing…';
+  if(!users.length){ note.textContent = ' - nothing added yet.'; return; }
+  note.textContent = ' - preparing...';
   try {
     const res = await fetch(window.location.href, { cache: 'no-store' });
     let src = await res.text();
     const base = BASE_RECIPES.slice();
     const seen = new Set(base.map(recipeKey));
     const merged = base.concat(users.filter(function(r){ return !seen.has(recipeKey(r)); }).map(function(r){ const c = Object.assign({}, r); delete c._user; return c; }));
-    if(!/\/\*RECIPES_START\*\/[\s\S]*?\/\*RECIPES_END\*\//.test(src)){ note.textContent = ' — could not find the insertion point in the page source.'; return; }
+    if(!/\/\*RECIPES_START\*\/[\s\S]*?\/\*RECIPES_END\*\//.test(src)){ note.textContent = ' - could not find the insertion point in the page source.'; return; }
     const literal = '/*RECIPES_START*/const BASE_RECIPES = ' + JSON.stringify(merged) + ';/*RECIPES_END*/';
     src = src.replace(/\/\*RECIPES_START\*\/[\s\S]*?\/\*RECIPES_END\*\//, function(){ return literal; });
     const blob = new Blob([src], { type: 'text/html' });
@@ -614,9 +613,12 @@ async function publishRecipes(){
     a.href = URL.createObjectURL(blob);
     a.download = 'index.html';
     a.click();
-    note.textContent = ' — downloaded! Replace index.html in your folder, then git push.';
+    note.textContent = ' - downloaded! Replace index.html in your folder, then git push.';
   } catch(e){
-    note.textContent = ' —
+    note.textContent = ' - could not read the page source (works on the live site, not from a local file).';
+  }
+}
+
 rebuildRecipes();
 renderGrid();
 
